@@ -1,0 +1,33 @@
+# requirements.txt
+
+# --- 핵심 웹 프레임워크 ---
+# 비동기 웹 프레임워크 및 ASGI 서버
+fastapi
+uvicorn[standard]
+
+# --- 파일 및 폼 데이터 처리 ---
+# HTML 폼 데이터(파일 업로드 포함)를 파싱하는 데 필수
+python-multipart
+# 대용량 파일을 메모리 문제 없이 비동기적으로 처리하기 위한 라이브러리
+aiofiles
+
+# --- OCR 및 이미지 처리 ---
+# Tesseract OCR 엔진을 Python에서 사용하기 위한 래퍼(조종기)
+pytesseract
+# 이미지 전처리(크기 조정, 노이즈 제거 등)를 위한 필수 라이브러리
+opencv-python
+
+# --- 로컬 번역 기능 ---
+# 인터넷 연결 없이 로컬에서 번역 기능을 제공하는 오픈소스 라이브러리
+argostranslate
+
+# --- 설정 및 데이터 검증 ---
+# FastAPI의 핵심 의존성으로, 데이터 유효성 검사를 담당
+# fastapi 설치 시 자동으로 설치되지만, 명시적으로 관리하는 것이 좋습니다.
+pydantic
+# 환경 변수(.env 파일 등)를 이용한 설정을 관리
+pydantic-settings
+
+# --- 결과물 생성 (선택 사항이지만 권장) ---
+# OCR 및 번역 결과를 PDF 파일로 생성하여 다운로드 기능을 구현할 때 사용
+fpdf2

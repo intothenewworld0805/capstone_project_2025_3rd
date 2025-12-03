@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로컬 OCR 문서 스캐너</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .main-card {
+            border-radius: 1rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        }
+        .preview-container, .result-container {
+            border: 2px dashed #ddd;
+            border-radius: 0.5rem;
+            min-height: 300px;
+        }
+        #imagePreview {
+            max-width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            border-radius: 0.5rem;
+        }
+        .loading-spinner {
+            width: 3rem;
+            height: 3rem;
+        }
+        .result-box {
+            background-color: #f1f3f5;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            white-space: pre-wrap; /* 줄바꿈 및 공백 유지 */
+            word-wrap: break-word; /* 긴 단어 자동 줄바꿈 */
+        }
+    </style>
+</head>
+<body class="py-5">
+
+    <div class="container">
+        <div class="card main-card p-4 p-md-5">
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <h1 class="h2 fw-bold"><i class="bi bi-person-bounding-box me-2"></i>로컬 OCR 문서 스캐너</h1>
+                    <p class="text-muted">이미지를 업로드하여 텍스트를 추출하고 번역합니다. (서버 로컬 실행)</p>
+                </div>
+            </div>
+
+            <form id="uploadForm">
+                <div class="row g-4">
+                    <!-- 1. 업로드 및 설정 영역 -->
+                    <div class="col-lg-5">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-gear-fill me-2"></i>처리 설정</h5>
+                        
+                        <!-- 파일 업로드 -->
+                        <div class="mb-3">
+                            <label for="fileInput" class="form-label fw-bold">1. 이미지 파일 선택</label>
+                            <input class="form-control" type="file" id="fileInput" accept="image/png, image/jpeg, image/bmp" required>
+                        </div>
+                        
+                        <!-- OCR 언어 선택 -->
+                        <div class="mb-3">
+                            <label for="ocrLanguage" class="form-label fw-bold">2. OCR 인식 언어</label>
+                            <select id="ocrLanguage" class="form-select">
+                                <option value="kor+eng" selected>한국어 + 영어 (기본값)</option>
+                                <option value="kor">한국어</option>
+                                <option value="eng">영어</option>
+                                <option value="jpn">일본어</option>
+                                <option value="chi_sim">중국어 (간체)</option>
+                            </select>
+                        </div>
+
+                        <!-- 번역 대상 언어 선택 -->
+                        <div class="mb-3">
+                            <label for="targetLanguage" class="form-label fw-bold">3. AI 번역 (선택)</label>
+                            <select id="targetLanguage" class="form-select">
+                                <option value="none" selected>번역 안 함</option>
+                                <option value="kor_Hang">한국어로 번역</option>
+                                <option value="eng_Latn">영어로 번역</option>
+                                <option value="jpn_Jpan">일본어로 번역</option>
+                                <option value="zho_Hans">중국어(간체)로 번역</option>
+                                <option value="spa_Latn">스페인어로 번역</option>
+                            </select>
+                        </div>
+
+                        <!-- 처리 옵션 -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">4. 전처리 옵션</label>
+                            <div class="form-check form-switch fs-5">
+                                <input class="form-check-input" type="checkbox" id="autoDeskew" checked>
+                                <label class="form-check-label" for="autoDeskew">자동 기울기 보정 (Deskew)</label>
+                            </div>
+                            <div class="form-check form-switch fs-5">
+                                <input class="form-check-input" type="checkbox" id="optimizeResolution" checked>
+                                <label class="form-check-label" for="optimizeResolution">저해상도 최적화 (300DPI)</label>
+                            </div>
+                        </div>
+
+                        <!-- 실행 버튼 -->
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold fs-5 py-3">
+                                <i class="bi bi-magic me-2"></i>텍스트 추출 시작
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. 미리보기 영역 -->
+                    <div class="col-lg-7">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-image me-2"></i>미리보기</h5>
+                        <div id="previewContainer" class="preview-container d-flex justify-content-center align-items-center bg-light text-muted p-3">
+                            <span id="previewPlaceholder"><i class="bi bi-card-image me-2 fs-3"></i>파일을 선택하면 여기에 미리보기가 표시됩니다.</span>
+                            <img id="imagePreview" src="" alt="이미지 미리보기" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <hr class="my-5">
+
+            <!-- 3. 결과 표시 영역 -->
+            <div class="row">
+                <div class="col-12">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-file-earmark-text-fill me-2"></i>처리 결과</h5>
+                    
+                    <!-- 로딩 스피너 (숨겨짐) -->
+                    <div id="loadingIndicator" classs="text-center my-5" style="display: none;">
+                        <div class="d-flex justify-content-center align-items-center">
+                            <div class="spinner-border text-primary loading-spinner" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <strong class="ms-3 fs-4 text-primary">이미지를 처리 중입니다... (AI 모델 로딩 시 시간이 걸릴 수 있습니다)</strong>
+                        </div>
+                    </div>
+
+                    <!-- 오류 메시지 (숨겨짐) -->
+                    <div id="errorAlert" class="alert alert-danger" style="display: none;"></div>
+
+                    <!-- 결과 표시 컨테이너 (숨겨짐) -->
+                    <div id="resultContainer" class="result-container" style="display: none;">
+                        <ul class="nav nav-tabs nav-fill mb-3" id="resultTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="raw-text-tab" data-bs-toggle="tab" data-bs-target="#raw-text-pane" type="button" role="tab">
+                                    <i class="bi bi-textarea-t me-2"></i>추출된 원본 텍스트
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="translation-tab" data-bs-toggle="tab" data-bs-target="#translation-pane" type="button" role="tab">
+                                    <i class="bi bi-translate me-2"></i>AI 번역 결과
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="info-tab" data-bs-toggle="tab" data-bs-target="#info-pane" type="button" role="tab">
+                                    <i class="bi bi-info-circle me-2"></i>처리 정보
+                                </button>
+                            </li>
+                        </ul>
+                        <div class="tab-content p-3" id="resultTabContent">
+                            <div class="tab-pane fade show active" id="raw-text-pane" role="tabpanel">
+                                <div id="rawTextResult" class="result-box"></div>
+                            </div>
+                            <div class="tab-pane fade" id="translation-pane" role="tabpanel">
+                                <div id="translationResult" class="result-box text-primary-emphasis"></div>
+                            </div>
+                            <div class="tab-pane fade" id="info-pane" role="tabpanel">
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        원본 파일명
+                                        <span id="infoFilename" class="badge bg-secondary rounded-pill"></span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        OCR 언어
+                                        <span id="infoOcrLang" class="badge bg-info rounded-pill"></span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        기울기 보정 각도
+                                        <span id="infoDeskewAngle" class="badge bg-success rounded-pill"></span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // DOM 요소 가져오기
+        const uploadForm = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+        
+        const ocrLanguage = document.getElementById('ocrLanguage');
+        const targetLanguage = document.getElementById('targetLanguage');
+        const autoDeskew = document.getElementById('autoDeskew');
+        const optimizeResolution = document.getElementById('optimizeResolution');
+        
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorAlert = document.getElementById('errorAlert');
+        const resultContainer = document.getElementById('resultContainer');
+        
+        const rawTextResult = document.getElementById('rawTextResult');
+        const translationResult = document.getElementById('translationResult');
+        const translationTab = document.getElementById('translation-tab');
+        
+        const infoFilename = document.getElementById('infoFilename');
+        const infoOcrLang = document.getElementById('infoOcrLang');
+        const infoDeskewAngle = document.getElementById('infoDeskewAngle');
+
+        // 파일 입력 시 미리보기 표시
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    previewPlaceholder.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 폼 제출 (OCR 요청) 이벤트 처리
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // 기본 폼 제출 방지
+
+            if (!fileInput.files[0]) {
+                showError("처리할 이미지 파일을 먼저 선택해주세요.");
+                return;
+            }
+
+            // UI 초기화
+            showLoading(true);
+            showError(null);
+            resultContainer.style.display = 'none';
+
+            // FormData 객체 생성
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('ocr_language', ocrLanguage.value);
+            formData.append('target_language', targetLanguage.value);
+            formData.append('auto_deskew', autoDeskew.checked);
+            formData.append('optimize_resolution', optimizeResolution.checked);
+
+            try {
+                // 백엔드 API 호출
+                const response = await fetch('/api/v1/process/document', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    // 서버가 500 오류 등 비정상 응답을 반환한 경우
+                    const errorData = await response.json().catch(() => null);
+                    const detail = errorData?.detail || errorData?.message || `서버 오류가 발생했습니다. (상태 코드: ${response.status})`;
+                    throw new Error(detail);
+                }
+
+                // 성공적으로 응답을 받은 경우 (JSON)
+                const data = await response.json();
+                
+                // 결과 표시
+                displayResults(data);
+
+            } catch (error) {
+                // 네트워크 오류 또는 JSON 파싱 오류 등
+                console.error("Fetch Error:", error);
+                showError(`오류 발생: ${error.message}`);
+            } finally {
+                // 로딩 종료
+                showLoading(false);
+            }
+        });
+
+        // 로딩 인디케이터 표시/숨기기
+        function showLoading(isLoading) {
+            loadingIndicator.style.display = isLoading ? 'block' : 'none';
+        }
+
+        // 오류 메시지 표시/숨기기
+        function showError(message) {
+            if (message) {
+                errorAlert.textContent = message;
+                errorAlert.style.display = 'block';
+            } else {
+                errorAlert.style.display = 'none';
+            }
+        }
+
+        // 결과 데이터 표시
+        function displayResults(data) {
+            resultContainer.style.display = 'block';
+
+            // 1. 추출된 텍스트
+            rawTextResult.textContent = data.raw_text || "(추출된 텍스트가 없습니다)";
+
+            // 2. 번역 결과
+            if (data.translation) {
+                translationResult.textContent = data.translation;
+                translationTab.style.display = 'block'; // 번역 탭 표시
+            } else {
+                translationResult.textContent = "(번역이 요청되지 않았습니다)";
+                translationTab.style.display = 'none'; // 번역 탭 숨기기
+            }
+
+            // 3. 처리 정보
+            infoFilename.textContent = data.original_filename;
+            infoOcrLang.textContent = data.applied_language;
+            infoDeskewAngle.textContent = `${parseFloat(data.deskew_angle).toFixed(2)} 도`;
+
+            // 기본 탭 활성화 (추출된 텍스트 탭)
+            var firstTab = new bootstrap.Tab(document.getElementById('raw-text-tab'));
+            firstTab.show();
+        }
+
+    </script>
+</body>
+</html>
