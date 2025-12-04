@@ -194,7 +194,7 @@ uvicorn main:app --reload
 This project is licensed under the MIT License.
 """
 
-### 파일을 쓰기 모드('w')로 열고 인코딩을 utf-8로 설정하여 내용을 작성합니다.
+#### 파일을 쓰기 모드('w')로 열고 인코딩을 utf-8로 설정하여 내용을 작성합니다.
 with open("README.md", "w", encoding="utf-8") as f:
     f.write(readme_content)
 
