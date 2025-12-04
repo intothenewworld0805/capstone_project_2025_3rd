@@ -193,12 +193,3 @@ uvicorn main:app --reload
 
 This project is licensed under the MIT License.
 """
-
-#### 파일을 쓰기 모드('w')로 열고 인코딩을 utf-8로 설정하여 내용을 작성합니다.
-with open("README.md", "w", encoding="utf-8") as f:
-    f.write(readme_content)
-
-print("=" * 50)
-print("성공! 'README.md' 파일이 현재 폴더에 생성되었습니다.")
-print("이제 GitHub에 업로드하실 수 있습니다.")
-print("=" * 50)
