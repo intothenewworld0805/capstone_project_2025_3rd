@@ -471,14 +471,14 @@ Poppler: PDF 처리를 위한 유틸리티
 
 ## 4-2. 설치 명령어
 
-# 1. 가상환경 생성 및 활성화
+### 1. 가상환경 생성 및 활성화
 conda create -n fullstack_env python=3.11 -y
 conda activate fullstack_env
 
-# 2. Poppler 설치 (conda-forge 채널 이용)
+### 2. Poppler 설치 (conda-forge 채널 이용)
 conda install -c conda-forge poppler -y
 
-# 3. 파이썬 의존성 패키지 설치
+### 3. 파이썬 의존성 패키지 설치
 pip install fastapi "uvicorn[standard]" python-multipart opencv-python pytesseract pillow pdf2image ctranslate2 transformers huggingface-hub
 pip install torch --index-url [https://download.pytorch.org/whl/cu121](https://download.pytorch.org/whl/cu121)
 
