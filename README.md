@@ -1,16 +1,16 @@
-📄 Full-Stack 기반 OCR 문서 스캐너 프로젝트
+# 📄 Full-Stack 기반 OCR 문서 스캐너 프로젝트
 
 보안과 정확성을 최우선으로 하는 로컬 기반(On-Premise) 문서 디지털화 및 AI 번역 솔루션
 
-1. 개요 (Overview)
+# 1. 개요 (Overview)
 
 이 프로젝트는 인터넷 연결 없는 **로컬 환경(Local-First)**에서 동작하는 Full-Stack 기반 OCR 문서 스캐너를 개발하는 것을 목표로 합니다. 민감한 정보가 포함된 계약서, 논문, 서적 등의 문서(이미지 및 PDF)를 외부 클라우드로 전송하지 않고, 사용자의 PC 자원을 활용하여 안전하게 텍스트로 변환하고 번역합니다.
 
 특히 본 시스템은 'Clean Source Preservation (원본 보존)' 전략을 채택했습니다. 과도한 이미지 전처리(이진화 등)가 오히려 고해상도 문서의 폰트 정보를 훼손하여 인식률을 떨어뜨린다는 실험 결과를 바탕으로, Tesseract 5의 순정 엔진 성능을 극대화하는 파이프라인을 구축했습니다. 또한, CTranslate2 기반의 양자화된 AI 모델을 통해 CPU 환경에서도 실시간에 준하는 번역 성능을 제공합니다.
 
-2. 시스템 구성 및 데이터 처리 (System Architecture)
+# 2. 시스템 구성 및 데이터 처리 (System Architecture)
 
-2-1. Tesseract OCR 엔진 최적화 전략
+## 2-1. Tesseract OCR 엔진 최적화 전략
 
 다양한 전처리 기법(Otsu Binarization, Adaptive Thresholding)을 테스트한 결과, 깨끗한 문서 이미지에서는 전처리를 최소화하고 엔진의 기본 기능을 활용하는 것이 가장 높은 정확도를 보였습니다.
 
@@ -62,7 +62,7 @@ def extract_text(self, image: np.ndarray, lang: str = 'kor+eng') -> str:
     return text
 
 
-2-2. API 데이터 입출력 명세
+## 2-2. API 데이터 입출력 명세
 
 FastAPI 백엔드는 비동기(Asynchronous) 방식으로 요청을 처리하며, 대용량 PDF 처리 시에도 서버가 멈추지 않도록 설계되었습니다.
 
@@ -123,9 +123,9 @@ Float
 }
 
 
-3. 성능 평가 및 최적화 결과 (Performance & Optimization)
+# 3. 성능 평가 및 최적화 결과 (Performance & Optimization)
 
-3-1. 처리 프로세스 및 최적화 내역
+## 3-1. 처리 프로세스 및 최적화 내역
 
 단계 (Stage)
 
@@ -167,7 +167,7 @@ Hugging Face 토큰 의존
 
 401 Unauthorized 오류 영구 해결 및 배포 용이성 증대
 
-3-2. 환경별 추론 속도 벤치마크 (Benchmark)
+## 3-2. 환경별 추론 속도 벤치마크 (Benchmark)
 
 NLLB-200-distilled-600M 모델 및 Tesseract 5 엔진 기준
 
@@ -203,7 +203,7 @@ CPU (Multi-thread)
 
 pdf2image 변환 시간 포함
 
-3-3. 학습 결과 분석 및 트러블슈팅 (Troubleshooting Report)
+## 3-3. 학습 결과 분석 및 트러블슈팅 (Troubleshooting Report)
 
 프로젝트 진행 중 발생한 주요 기술적 이슈와 해결 과정에 대한 분석입니다.
 
@@ -225,9 +225,9 @@ OCR 인식률의 역설 (Preprocessing Paradox)
 
 결론: 스크린샷과 원본 문서는 처리 방식이 달라야 함을 확인. **'깨끗한 문서'**라는 프로젝트 목표에 맞춰 모든 전처리를 제거하고 순정 엔진 모드로 회귀하여 정확도를 회복함.
 
-4. 설치 및 실행 가이드 (Installation)
+# 4. 설치 및 실행 가이드 (Installation)
 
-4-1. 필수 프로그램 (Prerequisites)
+## 4-1. 필수 프로그램 (Prerequisites)
 
 Python 3.11 (권장)
 
@@ -237,7 +237,7 @@ Tesseract OCR 5.0+: 다운로드 (시스템 PATH 등록 필수, kor, eng 데이�
 
 Poppler: PDF 처리를 위한 유틸리티
 
-4-2. 설치 명령어
+## 4-2. 설치 명령어
 
 # 1. 가상환경 생성 및 활성화
 conda create -n fullstack_env python=3.11 -y
@@ -251,7 +251,7 @@ pip install fastapi "uvicorn[standard]" python-multipart opencv-python pytessera
 pip install torch --index-url [https://download.pytorch.org/whl/cu121](https://download.pytorch.org/whl/cu121)
 
 
-4-3. 서버 실행
+## 4-3. 서버 실행
 
 # 프로젝트 루트 경로에서 실행
 uvicorn main:app --reload
