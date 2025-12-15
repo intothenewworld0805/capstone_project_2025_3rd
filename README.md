@@ -9,6 +9,8 @@
 > **보안과 정확성을 최우선으로 하는 로컬 기반(On-Premise) 문서 디지털화 및 AI 번역 솔루션**
 
 ---
+### 구동 youtube url
+https://www.youtube.com/watch?v=938ZgtHzXFg
 
 ## 1. 개요 (Overview)
 
